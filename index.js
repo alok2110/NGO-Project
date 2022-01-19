@@ -6,6 +6,7 @@ const cors = require("cors");
 
 const userRouter = require("./routes/userRoutes");
 const adminRouter = require("./routes/adminRoutes");
+const superAdminRouter = require("./routes/superAdminRoutes");
 
 require("dotenv").config();
 const app = express();
@@ -29,6 +30,7 @@ connect();
 app.use(bodyParser.json());
 app.use("/", userRouter);
 app.use("/", adminRouter);
+app.use("/", superAdminRouter);
 
 const PORT = process.env.PORT || 5000;
 

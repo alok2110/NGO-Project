@@ -5,6 +5,8 @@ require("dotenv").config();
 
 const Admin = require("../models/Admin");
 const Otp = require("../models/Otp");
+const User = require("../models/User");
+const ObjectId = require("mongodb").ObjectID;
 
 const createToken = (user) => {
   return jwt.sign({ user }, process.env.SECRET, {
@@ -66,6 +68,57 @@ module.exports.login = async (req, res) => {
     } else {
       return res.status(404).json({ errors: [{ msg: "Email not found" }] });
     }
+  } catch (error) {
+    return res.status(500).json({ errors: error });
+  }
+};
+
+module.exports.viewRegisteredUser = async (req, res) => {
+  try {
+    const getUser = await User.find({ approveStatus: 0 });
+    return res.status(200).json(getUser);
+  } catch (error) {
+    return res.status(500).json({ errors: error });
+  }
+};
+
+module.exports.approveUser = async (req, res) => {
+  try {
+    const getUser = await User.findByIdAndUpdate(
+      { _id: ObjectId(req.params.id) },
+      { approveStatus: 1 }
+    );
+    return res.status(200).json({ msg: "user approved successfully" });
+  } catch (error) {
+    return res.status(500).json({ errors: error });
+  }
+};
+
+module.exports.rejectUser = async (req, res) => {
+  try {
+    const getUser = await User.findByIdAndUpdate(
+      { _id: ObjectId(req.params.id) },
+      { approveStatus: 2 }
+    );
+    return res.status(200).json({ msg: "user rejected successfully" });
+  } catch (error) {
+    return res.status(500).json({ errors: error });
+  }
+};
+
+module.exports.viewApprovedUser = async (req, res) => {
+  try {
+    const getUser = await User.find({ approveStatus: 1 });
+    return res.status(200).json(getUser);
+  } catch (error) {
+    return res.status(500).json({ errors: error });
+  }
+};
+
+module.exports.viewRejectedUser = async (req, res) => {
+  try {
+    const getUser = await User.find({ approveStatus: 2 });
+    return res.status(200).json(getUser);
   } catch (error) {
     return res.status(500).json({ errors: error });
   }

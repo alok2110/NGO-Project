@@ -9,6 +9,11 @@ const {
   rejectUser,
   viewApprovedUser,
   viewRejectedUser,
+  genrateCoinAdmin,
+  getGenrateCoinAdmin,
+  sendCoinToUser,
+  showAdminCoinDebitTransaction,
+  showAdminCoinCreditTransaction,
 } = require("../controllers/AdminController");
 
 router.post("/registerAdmin", register);
@@ -18,5 +23,18 @@ router.get("/approveUser/:id", auth, approveUser);
 router.get("/rejectUser/:id", auth, rejectUser);
 router.get("/viewApprovedUser", auth, viewApprovedUser);
 router.get("/viewRejectedUser", auth, viewRejectedUser);
+router.post("/genrateCoinAdmin", auth, genrateCoinAdmin);
+router.get("/getGenrateCoinAdmin", auth, getGenrateCoinAdmin);
+router.post("/sendCoinToUser", auth, sendCoinToUser);
+router.get(
+  "/showAdminCoinDebitTransaction",
+  auth,
+  showAdminCoinDebitTransaction
+);
+router.get(
+  "/showAdminCoinCreditTransaction",
+  auth,
+  showAdminCoinCreditTransaction
+);
 
 module.exports = router;

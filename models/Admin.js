@@ -9,6 +9,10 @@ const adminSchema = new Schema(
       type: String,
       required: true,
     },
+    mobile: {
+      type: Number,
+      required: true,
+    },
     password: {
       type: String,
       required: true,
@@ -16,6 +20,10 @@ const adminSchema = new Schema(
     userType: {
       type: Number,
       default: 2,
+    },
+    coins: {
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true }

@@ -4,6 +4,9 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const User = require("../models/User");
 const Otp = require("../models/Otp");
+const Admin = require("../models/Admin");
+const CoinGenrateHistory = require("../models/CoinGenrateHistory");
+const Transaction = require("../models/Transaction");
 var ObjectId = require("mongodb").ObjectID;
 
 const createToken = (user) => {
@@ -250,4 +253,157 @@ const passwordResetMailer = (email, otp) => {
       console.log("Email sent: " + info.response);
     }
   });
+};
+
+module.exports.genrateCoinUser = async (req, res) => {
+  const { genratedCoin } = req.body;
+  const { coins } = await User.findOne({ _id: ObjectId(req.user._id) });
+  const totalCoins = genratedCoin + coins;
+  try {
+    const genrateCoinAdmin = await User.findByIdAndUpdate(
+      { _id: ObjectId(req.user._id) },
+      {
+        coins: totalCoins,
+      }
+    );
+    const { firstName, coins } = await User.findOne({
+      _id: ObjectId(req.user._id),
+    });
+    const addHistory = await CoinGenrateHistory.create({
+      userId: req.user._id,
+      name: firstName,
+      coin: genratedCoin,
+      genrateDate: new Date().toDateString(),
+    });
+    return res.status(200).json({ msg: "Coin genrated successfully", coins });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ errors: error });
+  }
+};
+
+module.exports.getGenrateCoinUser = async (req, res) => {
+  try {
+    const getData = await CoinGenrateHistory.find({
+      userId: ObjectId(req.user._id),
+    });
+    res.status(200).json({ response: getData });
+  } catch (error) {
+    return res.status(500).json({ errors: error });
+  }
+};
+
+module.exports.sendCoinToUser = async (req, res) => {
+  const { mobile, sendCoin } = req.body;
+
+  const getUser = await User.findOne({ _id: ObjectId(req.user._id) });
+  const { _id, coins } = getUser;
+  const checkUser = await User.findOne({ mobile });
+  if (checkUser === null) {
+    res.status(404).json({ msg: "mobile number not found" });
+  } else {
+    if (coins >= sendCoin) {
+      try {
+        const minusUserCoin = coins - sendCoin;
+        const updateUserCoin = await User.findByIdAndUpdate(
+          { _id: ObjectId(req.user._id) },
+          {
+            coins: minusUserCoin,
+          }
+        );
+        const { id } = checkUser;
+        const totalCoinSended = sendCoin + checkUser.coins;
+        const updateCoin = await User.findByIdAndUpdate(
+          { _id: ObjectId(id) },
+          {
+            coins: totalCoinSended,
+          }
+        );
+        const addTransaction = await Transaction.create({
+          coins: sendCoin,
+          sender_phone: getUser.mobile,
+          sender_name: getUser.firstName + " " + getUser.lastName,
+          receiver_name: checkUser.firstName + " " + checkUser.lastName,
+          receiver_phone: checkUser.mobile,
+        });
+        const getUserDetail = await User.findOne({
+          _id: ObjectId(req.user._id),
+        });
+        const updatedCoin = getUserDetail.coins;
+
+        res
+          .status(200)
+          .json({ msg: "coins sended successfully", getUser, updatedCoin });
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      console.log("sender coin is greater");
+    }
+  }
+};
+
+module.exports.sendCoinToAdmin = async (req, res) => {
+  const { sendCoin, mobile } = req.body;
+
+  const getUser = await User.findOne({ _id: ObjectId(req.user._id) });
+  const { _id, coins } = getUser;
+  const checkUser = await Admin.findOne({ mobile });
+  if (checkUser === null) {
+    res.status(404).json({ msg: "admin not found" });
+  } else {
+    if (coins >= sendCoin) {
+      try {
+        const minusUserCoin = coins - sendCoin;
+        const updateUserCoin = await User.findByIdAndUpdate(
+          { _id: ObjectId(req.user._id) },
+          {
+            coins: minusUserCoin,
+          }
+        );
+        const { id } = checkUser;
+        const totalCoinSended = sendCoin + checkUser.coins;
+        const updateCoin = await Admin.findByIdAndUpdate(
+          { _id: ObjectId(id) },
+          {
+            coins: totalCoinSended,
+          }
+        );
+        const addTransaction = await Transaction.create({
+          coins: sendCoin,
+          sender_phone: getUser.mobile,
+          sender_name: getUser.firstName + " " + getUser.lastName,
+          receiver_name: checkUser.name,
+          receiver_phone: checkUser.mobile,
+        });
+        const getUserDetail = await User.findOne({
+          _id: ObjectId(req.user._id),
+        });
+        const updatedCoin = getUserDetail.coins;
+        res.status(200).json({ msg: "coins sended successfully", updatedCoin });
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      console.log("sender coin is greater");
+    }
+  }
+};
+
+module.exports.showUserCoinDebitTransaction = async (req, res) => {
+  try {
+    const getTran = await Transaction.find({ sender_phone: req.user.mobile });
+    return res.status(200).json(getTran);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+module.exports.showUserCoinCreditTransaction = async (req, res) => {
+  try {
+    const getTran = await Transaction.find({ receiver_phone: req.user.mobile });
+    return res.status(200).json(getTran);
+  } catch (error) {
+    console.log(error);
+  }
 };

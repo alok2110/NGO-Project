@@ -5,6 +5,7 @@ require("dotenv").config();
 const User = require("../models/User");
 const Otp = require("../models/Otp");
 const Admin = require("../models/Admin");
+const SuperAdmin = require("../models/SuperAdmin");
 const CoinGenrateHistory = require("../models/CoinGenrateHistory");
 const Transaction = require("../models/Transaction");
 var ObjectId = require("mongodb").ObjectID;
@@ -155,6 +156,8 @@ module.exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
+    const admin = await Admin.findOne({ email });
+    const superAdmin = await SuperAdmin.findOne({ email });
     if (user) {
       const matched = await bcrypt.compare(password, user.password);
       if (matched) {
@@ -173,10 +176,37 @@ module.exports.login = async (req, res) => {
           .status(401)
           .json({ errors: [{ msg: "Password is not correct" }] });
       }
+    }
+    if (admin) {
+      const matched = await bcrypt.compare(password, admin.password);
+      if (matched) {
+        const token = createToken(admin);
+        return res
+          .status(200)
+          .json({ msg: "You have login successfully", token, admin });
+      } else {
+        return res
+          .status(401)
+          .json({ errors: [{ msg: "Password is not correct" }] });
+      }
+    }
+    if (superAdmin) {
+      const matched = await bcrypt.compare(password, superAdmin.password);
+      if (matched) {
+        const token = createToken(superAdmin);
+        return res
+          .status(200)
+          .json({ msg: "You have login successfully", token, superAdmin });
+      } else {
+        return res
+          .status(401)
+          .json({ errors: [{ msg: "Password is not correct" }] });
+      }
     } else {
       return res.status(404).json({ errors: [{ msg: "Email not found" }] });
     }
   } catch (error) {
+    console.log(error);
     return res.status(500).json({ errors: error });
   }
 };

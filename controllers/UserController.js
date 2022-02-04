@@ -163,9 +163,10 @@ module.exports.login = async (req, res) => {
       if (matched) {
         if (user.emailVerified === 1) {
           const token = createToken(user);
+          const users = user;
           return res
             .status(200)
-            .json({ msg: "You have login successfully", token, user });
+            .json({ msg: "You have login successfully", token, users });
         } else {
           return res
             .status(400)
@@ -181,9 +182,10 @@ module.exports.login = async (req, res) => {
       const matched = await bcrypt.compare(password, admin.password);
       if (matched) {
         const token = createToken(admin);
+        const users = admin;
         return res
           .status(200)
-          .json({ msg: "You have login successfully", token, admin });
+          .json({ msg: "You have login successfully", token, users });
       } else {
         return res
           .status(401)
@@ -194,9 +196,10 @@ module.exports.login = async (req, res) => {
       const matched = await bcrypt.compare(password, superAdmin.password);
       if (matched) {
         const token = createToken(superAdmin);
+        const users = superAdmin;
         return res
           .status(200)
-          .json({ msg: "You have login successfully", token, superAdmin });
+          .json({ msg: "You have login successfully", token, users });
       } else {
         return res
           .status(401)
